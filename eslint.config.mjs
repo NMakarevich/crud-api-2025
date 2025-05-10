@@ -4,9 +4,20 @@ import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 
 
-export default defineConfig([
-  { files: ["**/*.{js,mjs,cjs,ts}"], plugins: { eslint }, extends: ["eslint/recommended"] },
-  { files: ["**/*.{js,mjs,cjs,ts}"], languageOptions: { globals: globals.node} },
-  tseslint.configs.recommended,
-  eslint.configs.recommended
-]);
+export default tseslint.config({
+    files: ["**/*.{js,mjs,cjs,ts}"],
+    plugins: { eslint, tseslint },
+    extends: [
+        tseslint.configs.recommended,
+        eslint.configs.recommended
+    ],
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "error"
+    },
+    languageOptions: {
+      globals: globals.node,
+      parser: tseslint.parser,
+    }
+  }
+);

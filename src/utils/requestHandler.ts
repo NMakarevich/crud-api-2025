@@ -138,8 +138,8 @@ async function methodDelete(req: http.IncomingMessage, res: http.ServerResponse)
         res.write('User delete successfully');
         res.end();
       } else {
-        res.writeHead(500);
-        res.write('Internal server error\n');
+        res.writeHead(404);
+        res.write('User is not found');
         res.end();
       }
     }

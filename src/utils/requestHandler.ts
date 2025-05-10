@@ -2,13 +2,13 @@ import http from 'node:http';
 import usersController from '../controllers/users.ts';
 import { isValidId } from './validateId.ts';
 import { isValidData } from './validateData.ts';
+import { sendResponse } from './sendResponse.ts';
+import { MESSAGES } from '../constants/constants.ts';
 
 export async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
   try {
     if (!req.url || !req.url.startsWith('/api/user')) {
-      res.writeHead(404);
-      res.write('404 Not Found');
-      res.end();
+      sendResponse({ res, code: 404, message: MESSAGES.URL_NOT_FOUND });
     } else {
       const method = req.method;
       switch (method) {
@@ -25,18 +25,11 @@ export async function handleRequest(req: http.IncomingMessage, res: http.ServerR
           await methodDelete(req, res);
           break;
         default:
-          res.writeHead(400);
-          res.write('Invalid method');
-          res.end();
+          sendResponse({ res, code: 400, message: MESSAGES.INVALID_METHOD });
       }
     }
   } catch (error: unknown) {
-    res.writeHead(500);
-    res.write('Internal Server Error');
-    if (error instanceof Error) {
-      res.write(`Error: ${error.message}`);
-    }
-    res.end();
+    sendResponse({ res, code: 500, error, message: MESSAGES.SERVER_ERROR });
   }
 }
 
@@ -45,23 +38,15 @@ async function methodGet(req: http.IncomingMessage, res: http.ServerResponse) {
   const id = url?.split('/api/users').pop()?.slice(1);
   if (!id) {
     const users = await usersController.getUsers();
-    res.writeHead(200);
-    res.write(JSON.stringify(users));
-    res.end();
+    sendResponse({ res, code: 200, data: users });
   } else if (!isValidId(id)) {
-    res.writeHead(400);
-    res.write('User id is not valid uuid');
-    res.end();
+    sendResponse({ res, code: 400, message: MESSAGES.INVALID_UUID });
   } else {
     const user = await usersController.getUser(id);
     if (!user) {
-      res.writeHead(404);
-      res.write('User is not found');
-      res.end();
+      sendResponse({ res, code: 404, message: MESSAGES.USER_NOT_FOUND });
     } else {
-      res.writeHead(200);
-      res.write(JSON.stringify(user));
-      res.end();
+      sendResponse({ res, code: 200, data: user });
     }
   }
 }
@@ -70,9 +55,7 @@ async function methodPut(req: http.IncomingMessage, res: http.ServerResponse) {
   const { url } = req;
   const id = url?.split('/api/users').pop()?.slice(1);
   if (!id || !isValidId(id)) {
-    res.writeHead(400);
-    res.write(`User id is not valid uuid`);
-    res.end();
+    sendResponse({ res, code: 400, message: MESSAGES.INVALID_UUID });
   } else {
     let data = '';
     req.on('data', (chunk) => {
@@ -81,31 +64,18 @@ async function methodPut(req: http.IncomingMessage, res: http.ServerResponse) {
     req.on('end', async () => {
       try {
         if (!isValidData(data)) {
-          res.writeHead(400);
-          res.write(
-            'Invalid request body.\nBody should contain username: string, age: number, hobbies: string[].'
-          );
-          res.end();
+          sendResponse({ res, code: 400, message: MESSAGES.INVALID_BODY });
         } else {
           const updatedUser = JSON.parse(data);
           const result = await usersController.updateUser(updatedUser, id);
           if (result) {
-            res.writeHead(200);
-            res.write(JSON.stringify(result));
-            res.end();
+            sendResponse({ res, code: 200, data: result });
           } else {
-            res.writeHead(404);
-            res.write('User is not found');
-            res.end();
+            sendResponse({ res, code: 404, message: MESSAGES.USER_NOT_FOUND });
           }
         }
       } catch (error) {
-        res.writeHead(500);
-        res.write('Internal server error\n');
-        if (error instanceof Error) {
-          res.write('Error: ' + error.message);
-        }
-        res.end();
+        sendResponse({ res, code: 500, message: MESSAGES.SERVER_ERROR, error });
       }
     });
   }
@@ -118,25 +88,14 @@ async function methodPost(req: http.IncomingMessage, res: http.ServerResponse) {
   req.on('end', async () => {
     try {
       if (!isValidData(data)) {
-        res.writeHead(400);
-        res.write(
-          'Invalid request body.\nBody should contain username: string, age: number, hobbies: string[].'
-        );
-        res.end();
+        sendResponse({ res, code: 400, message: MESSAGES.INVALID_BODY });
       } else {
         const user = JSON.parse(data);
         const result = await usersController.addUser(user);
-        res.writeHead(201);
-        res.write(JSON.stringify(result));
-        res.end();
+        sendResponse({ res, code: 201, data: result });
       }
     } catch (error) {
-      res.writeHead(500);
-      res.write('Internal server error\n');
-      if (error instanceof Error) {
-        res.write('Error: ' + error.message);
-      }
-      res.end();
+      sendResponse({ res, code: 500, message: MESSAGES.SERVER_ERROR, error });
     }
   });
 }
@@ -145,27 +104,16 @@ async function methodDelete(req: http.IncomingMessage, res: http.ServerResponse)
     const { url } = req;
     const id = url?.split('/api/users').pop()?.slice(1);
     if (!id || !isValidId(id)) {
-      res.writeHead(400);
-      res.write(`User id is not valid uuid`);
-      res.end();
+      sendResponse({ res, code: 400, message: MESSAGES.INVALID_UUID });
     } else {
       const isDeleted = await usersController.deleteUser(id);
       if (isDeleted) {
-        res.writeHead(204);
-        res.write('User delete successfully');
-        res.end();
+        sendResponse({ res, code: 204 });
       } else {
-        res.writeHead(404);
-        res.write('User is not found');
-        res.end();
+        sendResponse({ res, code: 404, message: MESSAGES.USER_NOT_FOUND });
       }
     }
   } catch (error) {
-    res.writeHead(500);
-    res.write('Internal server error\n');
-    if (error instanceof Error) {
-      res.write('Error: ' + error.message);
-    }
-    res.end();
+    sendResponse({ res, code: 500, message: MESSAGES.SERVER_ERROR, error });
   }
 }

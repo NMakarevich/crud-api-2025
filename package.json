@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start:dev": "ts-node-dev src/index.ts"
+    "start:dev": "ts-node-dev src/index.ts",
+    "start:prod": "tsc && node dist/index.js"
   },
   "repository": {
     "type": "git",

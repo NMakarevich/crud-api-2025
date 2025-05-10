@@ -1,9 +1,9 @@
 import http from 'node:http';
-import usersController from '../controllers/users.ts';
-import { isValidId } from './validateId.ts';
-import { isValidData } from './validateData.ts';
-import { sendResponse } from './sendResponse.ts';
-import { MESSAGES } from '../constants/constants.ts';
+import usersController from '../controllers/users';
+import { isValidId } from './validateId';
+import { isValidData } from './validateData';
+import { sendResponse } from './sendResponse';
+import { MESSAGES } from '../constants/constants';
 
 export async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
   try {

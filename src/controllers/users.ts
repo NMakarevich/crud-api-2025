@@ -1,6 +1,6 @@
 import { CreateUser, Database, UpdateUser, User } from '../types/user';
 import * as uuid from 'uuid';
-import database from '../db/database.ts';
+import database from '../db/database';
 
 export class UsersController {
   database: Promise<Database> = database;

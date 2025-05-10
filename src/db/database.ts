@@ -1,4 +1,4 @@
-import { Database } from 'types/user';
+import { Database } from '../types/user';
 
 const database: Database = {
   users: [],

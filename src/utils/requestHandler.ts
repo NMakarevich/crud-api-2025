@@ -1,6 +1,7 @@
 import http from 'node:http';
 import usersController from '../controllers/users.ts';
 import { isValidId } from './validateId.ts';
+import { isValidData } from './validateData.ts';
 
 export async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
   try {
@@ -79,16 +80,24 @@ async function methodPut(req: http.IncomingMessage, res: http.ServerResponse) {
     });
     req.on('end', async () => {
       try {
-        const updatedUser = JSON.parse(data);
-        const result = await usersController.updateUser(updatedUser, id);
-        if (result) {
-          res.writeHead(200);
-          res.write(JSON.stringify(result));
+        if (!isValidData(data)) {
+          res.writeHead(400);
+          res.write(
+            'Invalid request body.\nBody should contain username: string, age: number, hobbies: string[].'
+          );
           res.end();
         } else {
-          res.writeHead(404);
-          res.write('User is not found');
-          res.end();
+          const updatedUser = JSON.parse(data);
+          const result = await usersController.updateUser(updatedUser, id);
+          if (result) {
+            res.writeHead(200);
+            res.write(JSON.stringify(result));
+            res.end();
+          } else {
+            res.writeHead(404);
+            res.write('User is not found');
+            res.end();
+          }
         }
       } catch (error) {
         res.writeHead(500);
@@ -108,11 +117,19 @@ async function methodPost(req: http.IncomingMessage, res: http.ServerResponse) {
   });
   req.on('end', async () => {
     try {
-      const user = JSON.parse(data);
-      const result = await usersController.addUser(user);
-      res.writeHead(201);
-      res.write(JSON.stringify(result));
-      res.end();
+      if (!isValidData(data)) {
+        res.writeHead(400);
+        res.write(
+          'Invalid request body.\nBody should contain username: string, age: number, hobbies: string[].'
+        );
+        res.end();
+      } else {
+        const user = JSON.parse(data);
+        const result = await usersController.addUser(user);
+        res.writeHead(201);
+        res.write(JSON.stringify(result));
+        res.end();
+      }
     } catch (error) {
       res.writeHead(500);
       res.write('Internal server error\n');
